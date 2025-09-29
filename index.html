@@ -1,411 +1,249 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Verificador de Contratos Duplicados</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <style>
-    /* Estilos para consistência com o dashboard anterior */
-    .btn {
-        background: #1E4069;
-        color: #FFFFFF;
-        transition: background-color 0.3s;
-    }
-    .btn:hover {
-        background: #4DA8DA;
-    }
-    .btn-secondary {
-        background: #E6ECEF;
-        color: #333333;
-    }
-    .btn-secondary:hover {
-        background: #d1d9de;
-    }
-    #modalDetalhes .modal-inner {
-      max-height: 80vh;
-      overflow-y: auto;
-      max-width: 600px;
-    }
-    .hidden { display: none !important; }
-    #loadingOverlay {
-      background: rgba(255,255,255,0.8);
-      position: fixed;
-      z-index: 1000;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .spinner {
-      border: 6px solid #E6ECEF;
-      border-top: 6px solid #1E4069;
-      border-radius: 50%;
-      width: 56px;
-      height: 56px;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      0% {transform: rotate(0deg);}
-      100% {transform: rotate(360deg);}
-    }
-    /* Estilo para destacar as diferenças entre os contratos */
-    .diferente {
-        background-color: #FFF9CC; /* Amarelo claro para destacar */
-        font-weight: bold;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <title>Verificador e Adicionador de Contratos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <style>
+    /* Estilos para consistência com o dashboard anterior */
+    .btn {
+        background: #1E4069;
+        color: #FFFFFF;
+        transition: background-color 0.3s;
+    }
+    .btn:hover {
+        background: #4DA8DA;
+    }
+    .btn:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+    }
+    .btn-secondary {
+        background: #E6ECEF;
+        color: #333333;
+    }
+    .btn-secondary:hover {
+        background: #d1d9de;
+    }
+    #modalDetalhes .modal-inner {
+      max-height: 80vh;
+      overflow-y: auto;
+      max-width: 600px;
+    }
+    .hidden { display: none !important; }
+    #loadingOverlay {
+      background: rgba(255,255,255,0.8);
+      position: fixed;
+      z-index: 1000;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .spinner {
+      border: 6px solid #E6ECEF;
+      border-top: 6px solid #1E4069;
+      border-radius: 50%;
+      width: 56px;
+      height: 56px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% {transform: rotate(0deg);}
+      100% {transform: rotate(360deg);}
+    }
+    .diferente {
+        background-color: #FFF9CC;
+        font-weight: bold;
+    }
+  </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col font-sans">
-  <!-- Overlay de Carregamento -->
-  <div id="loadingOverlay">
-    <div>
-      <div class="spinner mx-auto"></div>
-      <div class="text-[#1E4069] text-lg mt-3 text-center font-bold">Carregando e processando contratos...</div>
-    </div>
-  </div>
+    <div id="loadingOverlay">
+    <div>
+      <div class="spinner mx-auto"></div>
+      <div class="text-[#1E4069] text-lg mt-3 text-center font-bold">Carregando e processando contratos...</div>
+    </div>
+  </div>
 
-  <!-- Cabeçalho -->
-  <header class="bg-[#1E4069] text-white p-4 shadow">
-    <h1 class="text-2xl font-bold text-center">Verificador de Contratos Duplicados</h1>
-  </header>
+    <header class="bg-[#1E4069] text-white p-4 shadow">
+    <h1 class="text-2xl font-bold text-center">Verificador e Adicionador de Contratos</h1>
+  </header>
 
-  <!-- Conteúdo Principal -->
-  <main class="flex-1 p-4 md:p-6">
-    <!-- Painel de Controles -->
-    <section id="controles" class="bg-white p-6 rounded shadow mb-6">
-      <div class="border-b pb-4 mb-4">
-        <h2 class="text-lg font-bold text-gray-800">1. Critérios para Duplicidade</h2>
-        <p class="text-sm text-gray-600 mt-1">Selecione os campos que devem ser idênticos para um contrato ser considerado um duplicado.</p>
-      </div>
-      <div id="criterios-selecao" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <!-- Checkboxes serão inseridos aqui pelo JS -->
-      </div>
-      <div class="mt-6 text-center">
-        <button id="verificarDuplicados" class="btn px-6 py-2 rounded font-semibold">Verificar Duplicados</button>
-      </div>
-    </section>
+    <main class="flex-1 p-4 md:p-6">
+        <section id="controles" class="bg-white p-6 rounded shadow mb-6">
+      <div class="border-b pb-4 mb-4">
+        <h2 class="text-lg font-bold text-gray-800">1. Critérios para Duplicidade</h2>
+        <p class="text-sm text-gray-600 mt-1">Selecione os campos que devem ser idênticos para um contrato ser considerado um duplicado.</p>
+      </div>
+      <div id="criterios-selecao" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              </div>
+      <div class="mt-6 text-center">
+        <button id="verificarDuplicados" class="btn px-6 py-2 rounded font-semibold">Verificar Duplicados</button>
+      </div>
+    </section>
 
-    <!-- Painel de Resultados -->
-    <section id="resultados" class="bg-white p-6 rounded shadow">
+        <section id="resultados" class="bg-white p-6 rounded shadow mb-6">
+        <div class="border-b pb-4 mb-4">
+            <h2 class="text-lg font-bold text-gray-800">2. Resultados da Análise</h2>
+        </div>
+        <div id="resultados-conteudo" class="text-center text-gray-500">
+            <p>Aguardando a verificação...</p>
+        </div>
+    </section>
+    
+        <section id="adicionar-contrato" class="bg-white p-6 rounded shadow mb-6">
         <div class="border-b pb-4 mb-4">
-            <h2 class="text-lg font-bold text-gray-800">2. Resultados da Análise</h2>
+            <h2 class="text-lg font-bold text-gray-800">3. Adicionar Novo Contrato</h2>
+            <p class="text-sm text-gray-600 mt-1">Preencha os campos abaixo para inserir um novo contrato na planilha.</p>
         </div>
-        <div id="resultados-conteudo" class="text-center text-gray-500">
-            <p>Aguardando a verificação...</p>
-        </div>
+        <form id="formContrato">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="space-y-3">
+                    <div>
+                        <label for="numContrato" class="block text-sm font-medium text-gray-700">N° Contrato</label>
+                        <input type="text" id="numContrato" name="numContrato" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4DA8DA] focus:border-[#4DA8DA] sm:text-sm" required>
+                    </div>
+                    <div>
+                        <label for="anoContrato" class="block text-sm font-medium text-gray-700">Ano do Contrato</label>
+                        <input type="number" id="anoContrato" name="anoContrato" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4DA8DA] focus:border-[#4DA8DA] sm:text-sm" required>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label for="contratado" class="block text-sm font-medium text-gray-700">Contratado</label>
+                        <input type="text" id="contratado" name="contratado" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4DA8DA] focus:border-[#4DA8DA] sm:text-sm" required>
+                    </div>
+                    <div>
+                        <label for="cpfCnpj" class="block text-sm font-medium text-gray-700">CPF/CNPJ</label>
+                        <input type="text" id="cpfCnpj" name="cpfCnpj" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4DA8DA] focus:border-[#4DA8DA] sm:text-sm">
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label for="valorContrato" class="block text-sm font-medium text-gray-700">Valor do Contrato</label>
+                        <input type="text" id="valorContrato" name="valorContrato" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4DA8DA] focus:border-[#4DA8DA] sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="objeto" class="block text-sm font-medium text-gray-700">Objeto</label>
+                         <input type="text" id="objeto" name="objeto" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#4DA8DA] focus:border-[#4DA8DA] sm:text-sm">
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 text-center">
+                <button type="submit" id="enviarContrato" class="btn px-6 py-2 rounded font-semibold">Adicionar Contrato</button>
+            </div>
+        </form>
+        <p id="respostaApi" class="text-center mt-4 text-sm font-medium"></p>
     </section>
-  </main>
+      </main>
 
-  <!-- Modal para Detalhes do Contrato -->
-  <div id="modalDetalhes" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center hidden" aria-modal="true" role="dialog">
-    <div class="bg-white rounded shadow-lg modal-inner p-6 relative w-full m-4">
-      <button id="fecharModal" class="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-3xl" title="Fechar" aria-label="Fechar"><span aria-hidden="true">&times;</span></button>
-      <h3 class="text-xl font-bold mb-4" id="modalTitulo">Detalhes do Contrato</h3>
-      <div id="modalConteudo" class="space-y-2 text-sm"></div>
-    </div>
-  </div>
+    <div id="modalDetalhes" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center hidden" aria-modal="true" role="dialog">
+    <div class="bg-white rounded shadow-lg modal-inner p-6 relative w-full m-4">
+      <button id="fecharModal" class="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-3xl" title="Fechar" aria-label="Fechar"><span aria-hidden="true">&times;</span></button>
+      <h3 class="text-xl font-bold mb-4" id="modalTitulo">Detalhes do Contrato</h3>
+      <div id="modalConteudo" class="space-y-2 text-sm"></div>
+    </div>
+  </div>
 
-  <!-- Footer -->
-  <footer class="text-center text-gray-500 text-sm py-4">
-    ©️ 2025 Ferramenta de Análise de Contratos
-  </footer>
+    <footer class="text-center text-gray-500 text-sm py-4">
+    ©️ 2025 Ferramenta de Análise de Contratos
+  </footer>
 
 <script>
-  // --- VARIÁVEIS GLOBAIS ---
-  const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0URMfEf9HGcXuuCHgKFRfOEx7t_zR_lSMS7xNiFjPe17ZwH3u5Tw8duT1AwCsktqrY3CA3slAKxVL/pub?output=csv";
-  let contratos = [];
+  // --- VARIÁVEIS GLOBAIS ---
+  const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0URMfEf9HGcXuuCHgKFRfOEx7t_zR_lSMS7xNiFjPe17ZwH3u5Tw8duT1AwCsktqrY3CA3slAKxVL/pub?output=csv";
+  let contratos = [];
 
-  // Mapeamento de colunas (robusto para variações no nome da coluna)
-  const colunaMap = {
-    'instrumento': 'Instrumento',
-    'n contrato': 'N° Contrato',
-    'nº contrato': 'N° Contrato',
-    'ano contrato': 'AnoContrato',
-    'contratado': 'Contratado',
-    'cpfcnpj': 'CPF/CNPJ',
-    'descricao do objeto': 'Descrição do Objeto',
-    'valor contrato': 'ValorContrato',
-    'n ter aditivo apostilamento': 'Nº Ter. Aditivo Apostilamento',
-    'valor com alteracoes': 'Valor com Alterações',
-    'assinatura': 'Assinatura',
-    'inicio vigencia': 'Início Vigência',
-    'final vigencia': 'Final Vigência',
-    'situacao': 'Situação',
-    'n processo': 'N° Processo',
-    'ano processo': 'Ano Processo',
-    'gestores': 'Gestor(es)',
-    'natureza objeto': 'Natureza Objeto',
-    'objeto': 'Objeto',
-    'suplentes': 'Suplente(s)',
-    'fiscais': 'Fiscal(is)',
-    'prazo': 'Prazo',
-    'prazo maximo vigencia': 'Prazo Máximo Vigência',
-    'prorrogacao prazo': 'Prorrogação Prazo',
-    'lei': 'Lei',
-    'obs': 'OBS:'
-  };
-  
-  // Campos sugeridos para verificação de duplicidade, com os mais comuns pré-selecionados
-  const CRITERIOS_SUGERIDOS = [
-      { id: 'N° Processo', label: 'N° Processo', checked: true },
-      { id: 'Ano Processo', label: 'Ano Processo', checked: true },
-      { id: 'Contratado', label: 'Contratado', checked: true },
-      { id: 'CPF/CNPJ', label: 'CPF/CNPJ', checked: false },
-      { id: 'Objeto', label: 'Objeto', checked: true },
-      { id: 'N° Contrato', label: 'N° Contrato', checked: false },
-      { id: 'AnoContrato', label: 'Ano Contrato', checked: false },
-      { id: 'Início Vigência', label: 'Início Vigência', checked: false },
-  ];
+  const colunaMap = {
+    'instrumento': 'Instrumento', 'n contrato': 'N° Contrato', 'nº contrato': 'N° Contrato', 'ano contrato': 'AnoContrato', 'contratado': 'Contratado', 'cpfcnpj': 'CPF/CNPJ', 'descricao do objeto': 'Descrição do Objeto', 'valor contrato': 'ValorContrato', 'n ter aditivo apostilamento': 'Nº Ter. Aditivo Apostilamento', 'valor com alteracoes': 'Valor com Alterações', 'assinatura': 'Assinatura', 'inicio vigencia': 'Início Vigência', 'final vigencia': 'Final Vigência', 'situacao': 'Situação', 'n processo': 'N° Processo', 'ano processo': 'Ano Processo', 'gestores': 'Gestor(es)', 'natureza objeto': 'Natureza Objeto', 'objeto': 'Objeto', 'suplentes': 'Suplente(s)', 'fiscais': 'Fiscal(is)', 'prazo': 'Prazo', 'prazo maximo vigencia': 'Prazo Máximo Vigência', 'prorrogacao prazo': 'Prorrogação Prazo', 'lei': 'Lei', 'obs': 'OBS:'
+  };
+  
+  const CRITERIOS_SUGERIDOS = [
+      { id: 'N° Processo', label: 'N° Processo', checked: true }, { id: 'Ano Processo', label: 'Ano Processo', checked: true }, { id: 'Contratado', label: 'Contratado', checked: true }, { id: 'CPF/CNPJ', label: 'CPF/CNPJ', checked: false }, { id: 'Objeto', label: 'Objeto', checked: true }, { id: 'N° Contrato', label: 'N° Contrato', checked: false }, { id: 'AnoContrato', label: 'Ano Contrato', checked: false }, { id: 'Início Vigência', label: 'Início Vigência', checked: false },
+  ];
 
-  // --- FUNÇÕES AUXILIARES ---
-  function normalizeCol(str) {
-    return (str||'').normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim().replace(/[^a-zA-Z0-9 ]/g, "").toLowerCase();
-  }
+  // --- LÓGICA EXISTENTE PARA VERIFICAR DUPLICADOS (NENHUMA MUDANÇA AQUI) ---
+  function normalizeCol(str) { return (str||'').normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim().replace(/[^a-zA-Z0-9 ]/g, "").toLowerCase(); }
+  function parseDate(dateStr) { if (!dateStr) return null; if (typeof dateStr === 'number' || (!isNaN(dateStr) && String(dateStr).length >= 5)) { var utc_days = Math.floor(dateStr - 25569); var utc_value = utc_days * 86400; var date_info = new Date(utc_value * 1000); return new Date(date_info.getTime() + (date_info.getTimezoneOffset() * 60 * 1000)); } if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) { const [d, m, y] = dateStr.split('/'); return new Date(`${y}-${m}-${d}T00:00:00`); } if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) { return new Date(dateStr); } let d = new Date(dateStr); return isNaN(d.getTime()) ? null : d; }
+  function formatDateBR(dateStr) { const d = parseDate(dateStr); if (!d) return ""; return d.toLocaleDateString('pt-BR'); }
+  function showLoading(show = true) { document.getElementById('loadingOverlay').classList.toggle('hidden', !show); }
+  function renderizarCriterios() { const container = document.getElementById('criterios-selecao'); let html = ''; CRITERIOS_SUGERIDOS.forEach(criterio => { html += ` <label class="flex items-center space-x-2 p-2 rounded hover:bg-gray-100 cursor-pointer"> <input type="checkbox" name="criterio" value="${criterio.id}" class="h-4 w-4 rounded border-gray-300 text-[#1E4069] focus:ring-[#1E4069]" ${criterio.checked ? 'checked' : ''}> <span class="text-sm font-medium text-gray-700">${criterio.label}</span> </label> `; }); container.innerHTML = html; }
+  function verificarDuplicados() { const criteriosSelecionados = Array.from(document.querySelectorAll('input[name="criterio"]:checked')).map(cb => cb.value); if (criteriosSelecionados.length === 0) { alert('Por favor, selecione pelo menos um critério para verificação.'); return; } showLoading(true); const grupos = new Map(); contratos.forEach((contrato, index) => { const chave = criteriosSelecionados .map(criterio => (contrato[criterio] || '').toString().trim().toLowerCase()) .join('||'); if (!chave) return; if (!grupos.has(chave)) { grupos.set(chave, []); } grupos.get(chave).push({ ...contrato, originalIndex: index }); }); const duplicados = Array.from(grupos.values()).filter(grupo => grupo.length > 1); setTimeout(() => { renderizarResultados(duplicados, criteriosSelecionados); showLoading(false); }, 500); }
+  function renderizarResultados(grupos, criterios) { const container = document.getElementById('resultados-conteudo'); if (grupos.length === 0) { container.innerHTML = `<div class="text-center py-8"> <svg class="mx-auto h-12 w-12 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /> </svg> <h3 class="mt-2 text-lg font-medium text-gray-900">Nenhum duplicado encontrado!</h3> <p class="mt-1 text-sm text-gray-500">Com base nos critérios selecionados, todos os contratos são únicos.</p> </div>`; return; } let html = `<p class="text-left text-sm text-gray-600 mb-4">Encontrados <strong>${grupos.length}</strong> grupos de contratos duplicados. As células em amarelo indicam valores diferentes dentro do mesmo grupo.</p>`; grupos.forEach((grupo, index) => { const colunasDiferentes = new Set(); if (grupo.length > 1) { const primeiroContrato = grupo[0]; for (const key in primeiroContrato) { for (let i = 1; i < grupo.length; i++) { if (primeiroContrato[key] !== grupo[i][key]) { colunasDiferentes.add(key); break; } } } } const nomeEmpresa = grupo[0]['Contratado'] || `Grupo ${index + 1}`; html += `<div class="border rounded-lg shadow-sm mb-6 overflow-hidden"> <div class="bg-gray-50 p-3 border-b"> <h4 class="font-bold text-md text-[#1E4069]">${nomeEmpresa} (${grupo.length} contratos)</h4> <div class="text-xs text-gray-500 mt-1"> <strong>Critérios correspondentes:</strong> ${criterios.map(c => `${c}: <strong>${grupo[0][c] || 'N/A'}</strong>`).join('; ')} </div> </div> <div class="overflow-x-auto"> <table class="min-w-full text-sm"> <thead class="bg-gray-100 text-left"> <tr> <th class="py-2 px-3">N° Contrato</th> <th class="py-2 px-3">Ano</th> <th class="py-2 px-3">Valor com Alterações</th> <th class="py-2 px-3">Início Vigência</th> <th class="py-2 px-3">Final Vigência</th> <th class="py-2 px-3">Situação</th> <th class="py-2 px-3"></th> </tr> </thead> <tbody class="divide-y"> `; grupo.forEach(contrato => { html += ` <tr class="hover:bg-gray-50"> <td class="py-2 px-3 ${colunasDiferentes.has('N° Contrato') ? 'diferente' : ''}">${contrato['N° Contrato'] || ''}</td> <td class="py-2 px-3 ${colunasDiferentes.has('AnoContrato') ? 'diferente' : ''}">${contrato['AnoContrato'] || ''}</td> <td class="py-2 px-3 ${colunasDiferentes.has('Valor com Alterações') ? 'diferente' : ''}">${contrato['Valor com Alterações'] || ''}</td> <td class="py-2 px-3 ${colunasDiferentes.has('Início Vigência') ? 'diferente' : ''}">${formatDateBR(contrato['Início Vigência'])}</td> <td class="py-2 px-3 ${colunasDiferentes.has('Final Vigência') ? 'diferente' : ''}">${formatDateBR(contrato['Final Vigência'])}</td> <td class="py-2 px-3 ${colunasDiferentes.has('Situação') ? 'diferente' : ''}">${contrato['Situação'] || ''}</td> <td class="py-2 px-3 text-center"> <button class="ver-detalhes btn text-xs px-2 py-1 rounded" data-idx="${contrato.originalIndex}" title="Ver detalhes completos">Detalhes</button> </td> </tr> `; }); html += `</tbody></table></div></div>`; }); container.innerHTML = html; container.querySelectorAll('.ver-detalhes').forEach(btn => { btn.addEventListener('click', function() { const idx = this.getAttribute('data-idx'); mostrarDetalhesContrato(contratos[idx]); }); }); }
+  function mostrarDetalhesContrato(contrato) { let html = `<table class="min-w-full text-left border text-xs"><tbody>`; for (const [key, value] of Object.entries(contrato)) { if (key === 'originalIndex') continue; let displayValue = value; if (key === 'Final Vigência' || key === 'Início Vigência' || key === 'Assinatura') { displayValue = formatDateBR(value); } html += `<tr class="border-b"> <th class="py-1 px-2 bg-gray-50 font-semibold w-1/3">${key}</th> <td class="py-1 px-2">${displayValue || ''}</td> </tr>`; } html += `</tbody></table>`; document.getElementById('modalTitulo').innerText = `Detalhes do Contrato: ${contrato['N° Contrato'] || ''}`; document.getElementById('modalConteudo').innerHTML = html; document.getElementById('modalDetalhes').classList.remove('hidden'); }
+  function carregarContratosPlanilha() { showLoading(true); Papa.parse(SHEET_CSV_URL, { download: true, header: true, skipEmptyLines: true, complete: function(results) { if (!results.data || results.data.length === 0) { alert('Não foi possível carregar dados da planilha.'); showLoading(false); return; } contratos = results.data.map(row => { let obj = {}; for (const key in row) { let normKey = normalizeCol(key); let mappedKey = colunaMap[normKey] || key.trim(); obj[mappedKey] = typeof row[key] === 'string' ? row[key].trim() : row[key]; } return obj; }); document.getElementById('verificarDuplicados').disabled = false; document.getElementById('verificarDuplicados').textContent = 'Verificar Duplicados'; showLoading(false); }, error: function(err) { showLoading(false); alert('Erro ao carregar dados da planilha!'); console.error(err); document.getElementById('verificarDuplicados').textContent = 'Erro ao carregar dados'; } }); }
 
-  function parseDate(dateStr) {
-    if (!dateStr) return null;
-    if (typeof dateStr === 'number' || (!isNaN(dateStr) && String(dateStr).length >= 5)) {
-        var utc_days  = Math.floor(dateStr - 25569);
-        var utc_value = utc_days * 86400;
-        var date_info = new Date(utc_value * 1000);
-        return new Date(date_info.getTime() + (date_info.getTimezoneOffset() * 60 * 1000));
-    }
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-      const [d, m, y] = dateStr.split('/');
-      return new Date(`${y}-${m}-${d}T00:00:00`);
-    }
-    if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
-      return new Date(dateStr);
-    }
-    let d = new Date(dateStr);
-    return isNaN(d.getTime()) ? null : d;
-  }
+  // --- INICIALIZAÇÃO DA PÁGINA ---
+  document.addEventListener("DOMContentLoaded", function(){
+    // Lógica original
+    renderizarCriterios();
+    document.getElementById('verificarDuplicados').addEventListener('click', verificarDuplicados);
+    document.getElementById('verificarDuplicados').disabled = true;
+    document.getElementById('verificarDuplicados').textContent = 'Carregando dados...';
+    document.getElementById('fecharModal').onclick = () => { document.getElementById('modalDetalhes').classList.add('hidden'); };
+    document.getElementById('modalDetalhes').onclick = e => { if (e.target === document.getElementById('modalDetalhes')) { document.getElementById('modalDetalhes').classList.add('hidden'); } };
+    carregarContratosPlanilha();
 
-  function formatDateBR(dateStr) {
-    const d = parseDate(dateStr);
-    if (!d) return "";
-    return d.toLocaleDateString('pt-BR');
-  }
+    // --- NOVA LÓGICA PARA ADICIONAR CONTRATOS ---
+    const formContrato = document.getElementById('formContrato');
+    const respostaApi = document.getElementById('respostaApi');
+    const btnEnviar = document.getElementById('enviarContrato');
 
-  function showLoading(show = true) {
-    document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
-  }
-
-  // --- LÓGICA PRINCIPAL ---
-
-  function renderizarCriterios() {
-      const container = document.getElementById('criterios-selecao');
-      let html = '';
-      CRITERIOS_SUGERIDOS.forEach(criterio => {
-          html += `
-            <label class="flex items-center space-x-2 p-2 rounded hover:bg-gray-100 cursor-pointer">
-              <input type="checkbox" name="criterio" value="${criterio.id}" class="h-4 w-4 rounded border-gray-300 text-[#1E4069] focus:ring-[#1E4069]" ${criterio.checked ? 'checked' : ''}>
-              <span class="text-sm font-medium text-gray-700">${criterio.label}</span>
-            </label>
-          `;
-      });
-      container.innerHTML = html;
-  }
-
-  function verificarDuplicados() {
-    const criteriosSelecionados = Array.from(document.querySelectorAll('input[name="criterio"]:checked')).map(cb => cb.value);
-
-    if (criteriosSelecionados.length === 0) {
-      alert('Por favor, selecione pelo menos um critério para verificação.');
-      return;
-    }
-
-    showLoading(true);
-
-    // Agrupamento dos contratos
-    const grupos = new Map();
-    contratos.forEach((contrato, index) => {
-      const chave = criteriosSelecionados
-        .map(criterio => (contrato[criterio] || '').toString().trim().toLowerCase())
-        .join('||');
-      
-      if (!chave) return; // Ignora chaves vazias
-
-      if (!grupos.has(chave)) {
-        grupos.set(chave, []);
-      }
-      // Adiciona o contrato junto com seu índice original para referência
-      grupos.get(chave).push({ ...contrato, originalIndex: index });
-    });
-
-    // Filtrar apenas os grupos com duplicados
-    const duplicados = Array.from(grupos.values()).filter(grupo => grupo.length > 1);
-    
-    // Pequeno delay para percepção do carregamento, melhora a UX
-    setTimeout(() => {
-        renderizarResultados(duplicados, criteriosSelecionados);
-        showLoading(false);
-    }, 500);
-  }
-
-  function renderizarResultados(grupos, criterios) {
-    const container = document.getElementById('resultados-conteudo');
-    if (grupos.length === 0) {
-      container.innerHTML = `<div class="text-center py-8">
-        <svg class="mx-auto h-12 w-12 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-        </svg>
-        <h3 class="mt-2 text-lg font-medium text-gray-900">Nenhum duplicado encontrado!</h3>
-        <p class="mt-1 text-sm text-gray-500">Com base nos critérios selecionados, todos os contratos são únicos.</p>
-      </div>`;
-      return;
-    }
-
-    let html = `<p class="text-left text-sm text-gray-600 mb-4">Encontrados <strong>${grupos.length}</strong> grupos de contratos duplicados. As células em amarelo indicam valores diferentes dentro do mesmo grupo.</p>`;
-    
-    grupos.forEach((grupo, index) => {
-      // Identificar quais colunas têm valores diferentes dentro do grupo
-      const colunasDiferentes = new Set();
-      if (grupo.length > 1) {
-          const primeiroContrato = grupo[0];
-          for (const key in primeiroContrato) {
-              for (let i = 1; i < grupo.length; i++) {
-                  if (primeiroContrato[key] !== grupo[i][key]) {
-                      colunasDiferentes.add(key);
-                      break;
-                  }
-              }
-          }
-      }
-
-      const nomeEmpresa = grupo[0]['Contratado'] || `Grupo ${index + 1}`;
-
-      html += `<div class="border rounded-lg shadow-sm mb-6 overflow-hidden">
-        <div class="bg-gray-50 p-3 border-b">
-          <h4 class="font-bold text-md text-[#1E4069]">${nomeEmpresa} (${grupo.length} contratos)</h4>
-          <div class="text-xs text-gray-500 mt-1">
-            <strong>Critérios correspondentes:</strong> ${criterios.map(c => `${c}: <strong>${grupo[0][c] || 'N/A'}</strong>`).join('; ')}
-          </div>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-sm">
-            <thead class="bg-gray-100 text-left">
-              <tr>
-                <th class="py-2 px-3">N° Contrato</th>
-                <th class="py-2 px-3">Ano</th>
-                <th class="py-2 px-3">Valor com Alterações</th>
-                <th class="py-2 px-3">Início Vigência</th>
-                <th class="py-2 px-3">Final Vigência</th>
-                <th class="py-2 px-3">Situação</th>
-                <th class="py-2 px-3"></th>
-              </tr>
-            </thead>
-            <tbody class="divide-y">
-      `;
-      grupo.forEach(contrato => {
-        html += `
-          <tr class="hover:bg-gray-50">
-            <td class="py-2 px-3 ${colunasDiferentes.has('N° Contrato') ? 'diferente' : ''}">${contrato['N° Contrato'] || ''}</td>
-            <td class="py-2 px-3 ${colunasDiferentes.has('AnoContrato') ? 'diferente' : ''}">${contrato['AnoContrato'] || ''}</td>
-            <td class="py-2 px-3 ${colunasDiferentes.has('Valor com Alterações') ? 'diferente' : ''}">${contrato['Valor com Alterações'] || ''}</td>
-            <td class="py-2 px-3 ${colunasDiferentes.has('Início Vigência') ? 'diferente' : ''}">${formatDateBR(contrato['Início Vigência'])}</td>
-            <td class="py-2 px-3 ${colunasDiferentes.has('Final Vigência') ? 'diferente' : ''}">${formatDateBR(contrato['Final Vigência'])}</td>
-            <td class="py-2 px-3 ${colunasDiferentes.has('Situação') ? 'diferente' : ''}">${contrato['Situação'] || ''}</td>
-            <td class="py-2 px-3 text-center">
-                <button class="ver-detalhes btn text-xs px-2 py-1 rounded" data-idx="${contrato.originalIndex}" title="Ver detalhes completos">Detalhes</button>
-            </td>
-          </tr>
-        `;
-      });
-      html += `</tbody></table></div></div>`;
-    });
-    container.innerHTML = html;
-
-    // Adiciona os event listeners para os novos botões de detalhes
-    container.querySelectorAll('.ver-detalhes').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const idx = this.getAttribute('data-idx');
-            mostrarDetalhesContrato(contratos[idx]);
-        });
-    });
-  }
-
-  function mostrarDetalhesContrato(contrato) {
-    let html = `<table class="min-w-full text-left border text-xs"><tbody>`;
-    for (const [key, value] of Object.entries(contrato)) {
-        if (key === 'originalIndex') continue; // Não mostra o índice interno
-        let displayValue = value;
-        if (key === 'Final Vigência' || key === 'Início Vigência' || key === 'Assinatura') {
-            displayValue = formatDateBR(value);
-        }
-        html += `<tr class="border-b">
-            <th class="py-1 px-2 bg-gray-50 font-semibold w-1/3">${key}</th>
-            <td class="py-1 px-2">${displayValue || ''}</td>
-        </tr>`;
-    }
-    html += `</tbody></table>`;
-    
-    document.getElementById('modalTitulo').innerText = `Detalhes do Contrato: ${contrato['N° Contrato'] || ''}`;
-    document.getElementById('modalConteudo').innerHTML = html;
-    document.getElementById('modalDetalhes').classList.remove('hidden');
-  }
-
-  function carregarContratosPlanilha() {
-    showLoading(true);
-    Papa.parse(SHEET_CSV_URL, {
-      download: true,
-      header: true,
-      skipEmptyLines: true,
-      complete: function(results) {
-        if (!results.data || results.data.length === 0) {
-          alert('Não foi possível carregar dados da planilha.');
-          showLoading(false);
-          return;
-        }
+    formContrato.addEventListener('submit', async function(e) {
+        e.preventDefault(); // Previne o comportamento padrão de recarregar a página
         
-        // Processamento e limpeza dos dados
-        contratos = results.data.map(row => {
-          let obj = {};
-          for (const key in row) {
-            let normKey = normalizeCol(key);
-            let mappedKey = colunaMap[normKey] || key.trim();
-            obj[mappedKey] = typeof row[key] === 'string' ? row[key].trim() : row[key];
-          }
-          return obj;
-        });
+        // URL APLICADA!
+        const urlApi = 'https://script.google.com/macros/s/AKfycbx-jtER0XXSwWeeT9d-9YNCFjfc3kc3A3eFeXwL7bU9O75XF9PEhMDKl8MwU1HnBiK0/exec';
 
-        document.getElementById('verificarDuplicados').disabled = false;
-        document.getElementById('verificarDuplicados').textContent = 'Verificar Duplicados';
-        showLoading(false);
-      },
-      error: function(err) {
-        showLoading(false);
-        alert('Erro ao carregar dados da planilha!');
-        console.error(err);
-        document.getElementById('verificarDuplicados').textContent = 'Erro ao carregar dados';
-      }
+        // Pega os dados do formulário
+        const dadosParaEnviar = {
+            numContrato: document.getElementById('numContrato').value,
+            anoContrato: document.getElementById('anoContrato').value,
+            contratado: document.getElementById('contratado').value,
+            cpfCnpj: document.getElementById('cpfCnpj').value,
+            valorContrato: document.getElementById('valorContrato').value,
+            objeto: document.getElementById('objeto').value,
+        };
+
+        // Feedback visual para o usuário
+        btnEnviar.disabled = true;
+        btnEnviar.textContent = 'Enviando...';
+        respostaApi.textContent = '';
+
+        try {
+            const response = await fetch(urlApi, {
+                method: 'POST',
+                body: JSON.stringify(dadosParaEnviar),
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8', 
+                },
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'sucesso') {
+                respostaApi.textContent = result.mensagem;
+                respostaApi.style.color = 'green';
+                formContrato.reset(); // Limpa o formulário
+            } else {
+                throw new Error(result.mensagem);
+            }
+
+        } catch (error) {
+            respostaApi.textContent = 'Erro ao enviar: ' + error.message;
+            respostaApi.style.color = 'red';
+            console.error('Falha no envio:', error);
+        } finally {
+            // Reativa o botão independentemente do resultado
+            btnEnviar.disabled = false;
+            btnEnviar.textContent = 'Adicionar Contrato';
+        }
     });
-  }
-
-  // --- INICIALIZAÇÃO ---
-  document.addEventListener("DOMContentLoaded", function(){
-    renderizarCriterios();
-
-    document.getElementById('verificarDuplicados').addEventListener('click', verificarDuplicados);
-    document.getElementById('verificarDuplicados').disabled = true;
-    document.getElementById('verificarDuplicados').textContent = 'Carregando dados...';
-    
-    document.getElementById('fecharModal').onclick = () => {
-      document.getElementById('modalDetalhes').classList.add('hidden');
-    };
-    document.getElementById('modalDetalhes').onclick = e => {
-      // Fecha o modal apenas se o clique for no fundo escuro
-      if (e.target === document.getElementById('modalDetalhes')) {
-        document.getElementById('modalDetalhes').classList.add('hidden');
-      }
-    };
-
-    carregarContratosPlanilha();
-  });
+  });
 </script>
 </body>
 </html>
-
