@@ -115,7 +115,8 @@
   <footer class="text-center text-gray-500 text-sm py-4">©️ 2025 Dashboard de Contratos - Exemplo Interativo</footer>
 <script>
   // --- VARIÁVEIS GLOBAIS ---
-  const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0URMfEf9HGcXuuCHgKFRfOEx7t_zR_lSMS7xNiFjPe17ZwH3u5Tw8duT1AwCsktqrYCAslAKxVL/pub?output=csv";
+  // URL CORRIGIDA
+  const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0URMfEf9HGcXuuCHgKFRfOEx7t_zR_lSMS7xNiFjPe17ZwH3u5Tw8duT1AwCsktqrY3CA3slAKxVL/pub?output=csv";
   const SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwEVeDAHsBnqPc8RvGLZw5B0avSsmo2b_nmq5u2lPtFIJef9iVQw8UhZLFuxi6Xiy5D/exec";
   let contratos = [];
   let contratosFiltrados = [];
@@ -127,7 +128,7 @@
   const fiscaisCFISCON_EXIBIVEL = [ { norm: "CARMEN LUCIA ULGUIM CHAGAS PADOIN", exib: "Carmen Lucia Ulguim Chagas Padoin" }, { norm: "MARCIA BEHEREGARAY ARGOLLO MENDES", exib: "Marcia Beheregaray Argollo Mendes" }, { norm: "MAURICIO LEANDRO BORGES ROSA", exib: "Mauricio Leandro Borges Rosa" }, { norm: "OTAVIO DA SILVA AFONSO", exib: "Otavio da Silva Afonso" }, { norm: "ARIADNE SILVEIRA TUPY ASSU", exib: "Ariadne Silveira Tupy Assu" }, { norm: "FERNANDA DA ROSA PEDERNEIRAS", exib: "Fernanda Da Rosa Pederneiras" }, { norm: "FELIPE PAIVA CURI", exib: "Felipe Paiva Curi" } ];
   const colunaMap = { 'rowid': 'RowID', 'instrumento': 'Instrumento', 'n contrato': 'N° Contrato', 'nº contrato': 'N° Contrato', 'ano contrato': 'AnoContrato', 'contratado': 'Contratado', 'cpfcnpj': 'CPF/CNPJ', 'descricao do objeto': 'Descrição do Objeto', 'valor contrato': 'ValorContrato', 'n ter aditivo apostilamento': 'Nº Ter. Aditivo Apostilamento', 'valor com alteracoes': 'Valor com Alterações', 'assinatura': 'Assinatura', 'inicio vigencia': 'Início Vigência', 'final vigencia': 'Final Vigência', 'situacao': 'Situação', 'n processo': 'N° Processo', 'ano processo': 'Ano Processo', 'gestores': 'Gestor(es)', 'natureza objeto': 'Natureza Objeto', 'objeto': 'Objeto', 'suplentes': 'Suplente(s)', 'fiscais': 'Fiscal(is)', 'prazo': 'Prazo', 'prazo maximo vigencia': 'Prazo Máximo Vigência', 'prorrogacao prazo': 'Prorrogação Prazo', 'lei': 'Lei', 'obs': 'OBS:' };
 
-  // --- FUNÇÕES AUXILIARES E DE FILTRO (sem mudanças significativas) ---
+  // --- FUNÇÕES AUXILIARES E DE FILTRO ---
   function normSit(str) { return (str || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[–—-]/g, "-").replace(/\s+/g, " ").trim().toLowerCase(); }
   function agruparSituacao(sit) { if (!sit) return "Não Vigente"; const norm = normSit(sit); if (norm.includes("vigente")) { return "Vigente"; } return "Não Vigente"; }
   function fillSelectOptionsSituacao(selectId, array) { const select = document.getElementById(selectId); const seen = new Set(); array.forEach(c => { const grp = agruparSituacao(c['Situação']); if (grp) seen.add(grp); }); const values = ["Vigente", "Não Vigente"].filter(v => seen.has(v)); let options = `<option value="">Todas</option>`; values.forEach(val => { options += `<option value="${val}">${val}</option>`; }); select.innerHTML = options; }
@@ -135,7 +136,6 @@
   function limparPrefixoNumero(texto) { return (texto || '').replace(/^\s*\d+\s*[-–—]\s*/g, '').replace(/^\s*\d+\s+/g, '').trim(); }
   function normalizarNomeFiscal(nome) { if (!nome) return ''; let n = nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[-–—]/g, " ").replace(/\s+/g, " ").replace(/[^A-Z ]/gi, "").toUpperCase().trim(); n = n.replace(/\bASSU\b/g, "ASSU"); return n; }
   function nomeExibivelFiscal(normFiscal) { const fiscal = fiscaisCFISCON_EXIBIVEL.find(f => f.norm === normFiscal); if (fiscal) return fiscal.exib; return normFiscal.toLowerCase().replace(/(^|\s)\S/g, l => l.toUpperCase()); }
-  let cacheFiscais = new Map();
   function excelSerialToDate(serial) { var utc_days = Math.floor(serial - 25569); var utc_value = utc_days * 86400; var date_info = new Date(utc_value * 1000); date_info.setHours(0, 0, 0, 0); return date_info; }
   function parseDate(dateStr) { if (!dateStr) return null; if (typeof dateStr === 'number' || (!isNaN(dateStr) && String(dateStr).length >= 5 && String(dateStr).length <= 6)) { return excelSerialToDate(Number(dateStr)); } if (/^\d{2}\/\d{2}\/\d{2}$/.test(dateStr)) { const [d, m, y] = dateStr.split('/'); const ano = Number(y) < 50 ? '20' + y : '19' + y; return new Date(`${ano}-${m}-${d}T00:00:00`); } if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) { const [d, m, y] = dateStr.split('/'); return new Date(`${y}-${m}-${d}T00:00:00`); } if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) { return new Date(dateStr); } let d = new Date(dateStr); return isNaN(d.getTime()) ? null : d; }
   function formatDateBR(dateStr) { const d = parseDate(dateStr); if (!d) return ""; const day = String(d.getDate()).padStart(2, '0'); const month = String(d.getMonth() + 1).padStart(2, '0'); const year = d.getFullYear(); return `${day}/${month}/${year}`; }
@@ -170,25 +170,23 @@
   function abrirModalEdicao(contrato) {
     const container = document.getElementById('form-fields-container');
     let html = '';
-    // Esconder o RowID no formulário para que ele seja enviado, mas não visível
     html += `<input type="hidden" id="edit-RowID" name="RowID" value="${contrato.RowID}">`;
     
-    // Gerar campos para todas as outras propriedades do contrato
-    for (const key in colunaMap) {
-        const header = colunaMap[key];
-        if (header === 'RowID') continue; // Já foi adicionado como hidden
-
+    // Simplificando a geração dos campos do formulário
+    const headers = Object.values(colunaMap);
+    headers.forEach(header => {
+        if (header === 'RowID') return;
         const value = contrato[header] || '';
+        const isTextarea = header.toLowerCase().includes('objeto') || header.toLowerCase().includes('obs');
         html += `<div>
                    <label for="edit-${header}" class="block text-sm font-medium text-gray-700">${header}</label>`;
-        // Usar textarea para campos que podem ser longos
-        if (header.toLowerCase().includes('objeto') || header.toLowerCase().includes('obs')) {
+        if (isTextarea) {
              html += `<textarea id="edit-${header}" name="${header}" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">${value}</textarea>`;
         } else {
              html += `<input type="text" id="edit-${header}" name="${header}" value="${value}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">`;
         }
         html += `</div>`;
-    }
+    });
 
     container.innerHTML = html;
     document.getElementById('modalTituloEditar').innerText = `Editando Contrato: ${contrato['N° Contrato']}`;
@@ -197,6 +195,7 @@
 
   // --- LÓGICA DE CARREGAMENTO E PROCESSAMENTO DE DADOS ---
   function processData(data) { contratos = data.map(row => { let obj = {}; for (const k in row) { let norm = normalizeCol(k); let key = colunaMap[norm] || k.trim(); if(key){ obj[key] = typeof row[k] === 'string' ? row[k].trim() : row[k]; } } return obj; }); contratosFiltrados = [...contratos]; atualizarFiltros(); aplicarFiltros(); desenharGraficos(); }
+  function atualizarFiltros() { fillSelectOptions('filtroAnoContrato', contratos, 'AnoContrato'); fillSelectOptions('filtroFiscal', contratos, 'Fiscal(is)', true, true, true, true); fillSelectOptionsSituacao('filtroSituacao', contratos); }
   function carregarContratosPlanilha() { showLoading(true, "Carregando contratos..."); Papa.parse(SHEET_CSV_URL + '&_=' + new Date().getTime(), { download: true, header: true, skipEmptyLines: true, complete: function(results) { showLoading(false); if (!results.data || results.data.length === 0) { alert('Não foi possível carregar dados da planilha.'); return; } processData(results.data); desenharGraficos(); }, error: function(err) { showLoading(false); alert('Erro ao carregar dados da planilha!'); console.error(err); } }); }
 
   // --- LÓGICA VERIFICADOR DE DUPLICADOS (INTEGRADA) ---
@@ -251,7 +250,7 @@
                 respostaApi.style.color = 'green';
                 setTimeout(() => {
                     document.getElementById('modalEditar').classList.add('hidden');
-                    carregarContratosPlanilha(); // Recarrega os dados para refletir a mudança
+                    carregarContratosPlanilha();
                 }, 1500);
             } else { throw new Error(result.mensagem); }
         } catch (error) {
