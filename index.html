@@ -45,6 +45,11 @@
     </div>
   </div>
 
+  <!-- Container de Notificação -->
+  <div id="notification" class="hidden fixed top-5 right-5 z-[2000] p-4 rounded-lg shadow-lg text-white">
+    <span id="notification-message"></span>
+  </div>
+
   <header class="bg-[#1E4069] text-white p-4 shadow flex items-center justify-between flex-wrap gap-2">
     <h1 class="text-2xl font-bold">Dashboard de Análise de Contratos</h1>
     <div class="flex items-center gap-2">
@@ -161,7 +166,7 @@
   </main>
 
   <!-- ========= MODAL DE SENHA ========= -->
-  <div id="passwordModal" class="fixed inset-0 z-[1001] bg-black bg-opacity-50 flex items-center justify-center hidden p-4">
+  <div id="passwordModal" class="fixed inset-0 z-[1004] bg-black bg-opacity-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded shadow-lg p-6 w-full max-w-sm">
       <h3 class="text-lg font-bold mb-4">Acesso Restrito</h3>
       <p class="text-sm text-gray-600 mb-4">Por favor, insira a senha de administrador para continuar.</p>
@@ -177,7 +182,7 @@
   </div>
 
   <!-- ========= MODAL DE CONFIRMAÇÃO DE EXCLUSÃO ========= -->
-  <div id="confirmDeleteModal" class="fixed inset-0 z-[1002] bg-black bg-opacity-50 flex items-center justify-center hidden p-4">
+  <div id="confirmDeleteModal" class="fixed inset-0 z-[1003] bg-black bg-opacity-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded shadow-lg p-6 w-full max-w-sm">
       <h3 class="text-lg font-bold mb-2 text-red-700">Confirmar Exclusão</h3>
       <p class="text-sm text-gray-600 mb-4">Você tem certeza que deseja excluir este contrato? Esta ação não pode ser desfeita.</p>
@@ -189,7 +194,7 @@
   </div>
 
   <!-- ========= MODAL DE COMPARAÇÃO DE DUPLICADOS ========= -->
-  <div id="compareModal" class="fixed inset-0 z-[1001] bg-black bg-opacity-50 flex items-center justify-center hidden p-4">
+  <div id="compareModal" class="fixed inset-0 z-[1002] bg-black bg-opacity-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded shadow-lg p-6 relative w-full modal-inner">
       <button id="closeCompareModal" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-3xl leading-none" title="Fechar">&times;</button>
       <h3 class="text-lg font-bold mb-4">Comparar Contratos Duplicados</h3>
@@ -201,7 +206,7 @@
 
 
   <!-- ========= MODAL DE DETALHES E EDIÇÃO ========= -->
-  <div id="modalDetalhes" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center hidden p-4" aria-modal="true" role="dialog">
+  <div id="modalDetalhes" class="fixed inset-0 z-[1001] bg-black bg-opacity-50 flex items-center justify-center hidden p-4" aria-modal="true" role="dialog">
     <div class="bg-white rounded shadow-lg modal-inner p-6 relative w-full">
       <button id="fecharModal" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-3xl leading-none" title="Fechar">&times;</button>
       <h3 class="text-lg font-bold mb-4" id="modalTitulo"></h3>
@@ -247,7 +252,7 @@
   const CRITERIOS_SUGERIDOS = [ { id: 'N° Processo', label: 'N° Processo', checked: true }, { id: 'Ano Processo', label: 'Ano Processo', checked: true }, { id: 'Contratado', label: 'Contratado', checked: true }, { id: 'CPF/CNPJ', label: 'CPF/CNPJ', checked: false }, { id: 'Objeto', label: 'Objeto', checked: true }, { id: 'N° Contrato', label: 'N° Contrato', checked: false }, { id: 'AnoContrato', label: 'Ano Contrato', checked: false }, { id: 'Início Vigência', label: 'Início Vigência', checked: false }, ];
   const colunaMap = { 'rowid': 'RowID', 'instrumento': 'Instrumento', 'n contrato': 'N° Contrato', 'nº contrato': 'N° Contrato', 'ano contrato': 'AnoContrato', 'contratado': 'Contratado', 'cpfcnpj': 'CPF/CNPJ', 'descricao do objeto': 'Descrição do Objeto', 'valor contrato': 'ValorContrato', 'n ter aditivo apostilamento': 'Nº Ter. Aditivo Apostilamento', 'valor com alteracoes': 'Valor com Alterações', 'assinatura': 'Assinatura', 'inicio vigencia': 'Início Vigência', 'final vigencia': 'Final Vigência', 'situacao': 'Situação', 'n processo': 'N° Processo', 'ano processo': 'Ano Processo', 'gestores': 'Gestor(es)', 'natureza objeto': 'Natureza Objeto', 'objeto': 'Objeto', 'suplentes': 'Suplente(s)', 'fiscais': 'Fiscal(is)', 'prazo': 'Prazo', 'prazo maximo vigencia': 'Prazo Máximo Vigência', 'prorrogacao prazo': 'Prorrogação Prazo', 'lei': 'Lei', 'obs': 'OBS:' };
 
-  // --- FUNÇÕES DE AUTENTICAÇÃO COM MODAL ---
+  // --- FUNÇÕES DE AUTENTICAÇÃO E NOTIFICAÇÃO ---
   function requestPassword(onSuccessCallback) {
     if (sessionStorage.getItem('isAdminAuthenticated') === 'true') {
         if(typeof onSuccessCallback === 'function') onSuccessCallback();
@@ -258,6 +263,23 @@
     $('#passwordError').addClass('hidden');
     $('#passwordModal').removeClass('hidden');
     $('#passwordInput').focus();
+  }
+
+  function showNotification(message, type = 'success') {
+    const notification = $('#notification');
+    $('#notification-message').text(message);
+    
+    notification.removeClass('bg-green-500 bg-red-500');
+    if (type === 'error') {
+      notification.addClass('bg-red-500');
+    } else {
+      notification.addClass('bg-green-500');
+    }
+
+    notification.removeClass('hidden');
+    setTimeout(() => {
+      notification.addClass('hidden');
+    }, 3000); // Oculta após 3 segundos
   }
 
   // --- FUNÇÕES AUXILIARES GERAIS ---
@@ -295,7 +317,8 @@
     setTimeout(() => {
         $('#modalDetalhes').addClass('hidden');
         showSaving(false);
-        alert('Solicitação enviada! A planilha será atualizada. Por favor, recarregue a página em alguns minutos para ver a alteração.');
+        showNotification('Solicitação enviada! A planilha será atualizada.');
+        setTimeout(carregarContratosPlanilha, 2000);
     }, 1500);
   }
    function solicitarExclusao() {
@@ -305,7 +328,7 @@
   }
   function excluirContrato() {
     if (!currentEditingContract || !currentEditingContract.RowID) {
-      alert("Erro: Contrato inválido ou RowID não encontrado.");
+      showNotification("Erro: Contrato inválido ou RowID não encontrado.", 'error');
       return;
     }
     showSaving(true, "Excluindo...");
@@ -334,7 +357,7 @@
       }
       
       showSaving(false);
-      alert('Contrato excluído! A alteração foi enviada para a planilha e a visualização foi atualizada.');
+      showNotification('Contrato excluído com sucesso!');
     }, 1000);
   }
 
@@ -349,25 +372,23 @@
       });
       
       const situacaoOriginal = (obj['Situação'] || '').toLowerCase().trim();
-      // Se o status for "encerrado", ele tem prioridade e não deve ser alterado.
       if (situacaoOriginal !== 'encerrado') {
           const dias = diasAteVencimento(obj['Final Vigência']);
-          if (dias !== null) { // Apenas se houver uma data de vigência válida
+          if (dias !== null) {
               if (dias < 0) {
-                  obj['Situação'] = 'Expirado'; // Se a data já passou, força para "Expirado"
+                  obj['Situação'] = 'Expirado';
               } else {
-                  obj['Situação'] = 'Vigente'; // Se a data é hoje ou futura, força para "Vigente"
+                  obj['Situação'] = 'Vigente';
               }
           }
-      } // Se for "encerrado", ele permanece como está.
-
+      }
       return obj;
     });
     contratosFiltrados = [...contratos];
     atualizarFiltros();
     aplicarFiltros();
   }
-  function carregarContratosPlanilha() { showLoading(true); const url = `${SHEET_CSV_URL}&t=${new Date().getTime()}`; Papa.parse(url, { download: true, header: true, skipEmptyLines: true, complete: results => { if (results.data && results.data.length > 0) { processData(results.data, results.meta.fields); } else { alert('Não foi possível carregar dados da planilha.'); } showLoading(false); }, error: err => { showLoading(false); alert('Erro ao carregar dados da planilha!'); console.error(err); } }); }
+  function carregarContratosPlanilha() { showLoading(true); const url = `${SHEET_CSV_URL}&t=${new Date().getTime()}`; Papa.parse(url, { download: true, header: true, skipEmptyLines: true, complete: results => { if (results.data && results.data.length > 0) { processData(results.data, results.meta.fields); } else { showNotification('Não foi possível carregar dados da planilha.', 'error'); } showLoading(false); }, error: err => { showLoading(false); showNotification('Erro ao carregar dados da planilha!', 'error'); console.error(err); } }); }
 
   // --- FILTROS E LÓGICA DA TABELA PRINCIPAL ---
   function aplicarFiltros() { const ano = $('#filtroAnoContrato').val(); const vig = $('#filtroFinalVigencia').val(); const tipoObjeto = $('#filtroTipoObjeto').val(); const fiscal = $('#filtroFiscal').val(); const situacao = $('#filtroSituacao').val(); contratosFiltrados = contratos.filter(c => { if (termoBuscaUniversal && !Object.values(c).some(val => String(val).toLowerCase().includes(termoBuscaUniversal.toLowerCase()))) return false; if (ano && String(c['AnoContrato'] ?? '') !== ano) return false; if (tipoObjeto && mapearTipoObjeto(c['Objeto']) !== tipoObjeto) return false; if (fiscal && !(c['Fiscal(is)'] ?? '').split(/[,;\n]+/).map(f => limparPrefixoNumero(f).trim()).includes(fiscal)) return false; if (situacao && agruparSituacao(c['Situação']) !== situacao) return false; if (vig) { let dias = diasAteVencimento(c['Final Vigência']); if (dias === null || dias < 0 || dias > Number(vig)) return false; } return true; }); atualizarTabela(); atualizarAvisosVencimento(); renderPainelFiscaisCFISCON(); desenharGraficos(); }
@@ -415,7 +436,7 @@
   // --- GRÁFICOS E DUPLICADOS ---
   function desenharGraficos() { Chart.register(ChartDataLabels); const situacoes = {}; contratosFiltrados.forEach(c => { const grupo = agruparSituacao(c['Situação']); if (grupo) situacoes[grupo] = (situacoes[grupo] || 0) + 1; }); const sitLabels = ["Vigente", "Expirado", "Encerrado", "Não Vigente"]; const sitData = sitLabels.map(label => situacoes[label] || 0); if (chartSituacao) chartSituacao.destroy(); chartSituacao = new Chart($('#graficoSituacao'), { type: 'pie', data: { labels: sitLabels, datasets: [{ data: sitData, backgroundColor: ['#1E4069', '#F4A261', '#E63946', '#4DA8DA'] }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' }, datalabels: { color: '#fff', font: { weight: 'bold' } } } } }); const anos = {}; contratosFiltrados.forEach(c => { if (c['AnoContrato']) anos[c['AnoContrato']] = (anos[c['AnoContrato']] || 0) + 1; }); const anoLabels = Object.keys(anos).sort(); const anoData = anoLabels.map(a => anos[a]); if (chartAno) chartAno.destroy(); chartAno = new Chart($('#graficoAno'), { type: 'bar', data: { labels: anoLabels, datasets: [{ label: 'Contratos', data: anoData, backgroundColor: '#1E4069' }] }, options: { responsive: true, plugins: { legend: { display: false }, datalabels: { color: '#fff', font: { weight: 'bold' } } } } }); const faixas = [ { label: 'Até 6 meses', min: 0, max: 6 }, { label: '7 a 12 meses', min: 7, max: 12 }, { label: '13 a 24 meses', min: 13, max: 24 }, { label: '25 a 36 meses', min: 25, max: 36 }, { label: 'Acima de 36 meses', min: 37, max: 999 } ]; const prazos = [0, 0, 0, 0, 0]; contratosFiltrados.forEach(c => { let months = prazoMeses(c['Início Vigência'], c['Final Vigência']).replace(/[^0-9]/g,''); if (months) { for (let i = 0; i < faixas.length; i++) { if (months >= faixas[i].min && months <= faixas[i].max) { prazos[i]++; break; } } } }); if (chartPrazo) chartPrazo.destroy(); chartPrazo = new Chart($('#graficoPrazo'), { type: 'doughnut', data: { labels: faixas.map(f => f.label), datasets: [{ data: prazos, backgroundColor: ['#1E4069', '#4DA8DA', '#00A651', '#F4A261', '#0078A8'] }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' }, datalabels: { color: '#fff', font: { weight: 'bold' } } } } }); }
   function renderizarCriterios() { const container = $('#criterios-selecao'); container.html(CRITERIOS_SUGERIDOS.map(c => `<label class="flex items-center space-x-2 p-2 rounded hover:bg-gray-100 cursor-pointer"><input type="checkbox" name="criterio" value="${c.id}" class="h-4 w-4 rounded border-gray-300 text-[#1E4069] focus:ring-[#1E4069]" ${c.checked ? 'checked' : ''}><span class="text-sm font-medium text-gray-700">${c.label}</span></label>`).join('')); }
-  function verificarDuplicados() { const criteriosSelecionados = Array.from($('input[name="criterio"]:checked')).map(cb => cb.value); if (criteriosSelecionados.length === 0) { alert('Selecione pelo menos um critério.'); return; } showLoading(true, "Verificando..."); const grupos = new Map(); contratos.forEach((contrato) => { const chave = criteriosSelecionados.map(criterio => (contrato[criterio] || '').toString().trim().toLowerCase()).join('||'); if (!chave) return; if (!grupos.has(chave)) grupos.set(chave, []); grupos.get(chave).push(contrato); }); const duplicados = Array.from(grupos.values()).filter(grupo => grupo.length > 1); setTimeout(() => { renderizarResultados(duplicados); showLoading(false); }, 500); }
+  function verificarDuplicados() { const criteriosSelecionados = Array.from($('input[name="criterio"]:checked')).map(cb => cb.value); if (criteriosSelecionados.length === 0) { showNotification('Selecione pelo menos um critério.', 'error'); return; } showLoading(true, "Verificando..."); const grupos = new Map(); contratos.forEach((contrato) => { const chave = criteriosSelecionados.map(criterio => (contrato[criterio] || '').toString().trim().toLowerCase()).join('||'); if (!chave) return; if (!grupos.has(chave)) grupos.set(chave, []); grupos.get(chave).push(contrato); }); const duplicados = Array.from(grupos.values()).filter(grupo => grupo.length > 1); setTimeout(() => { renderizarResultados(duplicados); showLoading(false); }, 500); }
   function renderizarResultados(grupos) {
     const container = $('#resultados-conteudo');
     if (grupos.length === 0) {
