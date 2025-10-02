@@ -315,9 +315,14 @@
         contratos.splice(index, 1);
       }
       aplicarFiltros();
+
+      // Se a aba de duplicados estiver ativa, atualiza a visualização
+      if ($('#navDuplicados').hasClass('active')) {
+        verificarDuplicados();
+      }
       
       showSaving(false);
-      alert('Contrato excluído! A alteração foi enviada para a planilha.');
+      alert('Contrato excluído! A alteração foi enviada para a planilha e a visualização foi atualizada.');
     }, 1000);
   }
 
