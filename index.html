@@ -71,38 +71,38 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4" id="filtros">
            <div>
-            <label class="block text-sm font-semibold mb-1">Ano do Contrato</label>
-            <select id="filtroAnoContrato" class="w-full border rounded px-2 py-1"></select>
-          </div>
-          <div>
-            <label class="block text-sm font-semibold mb-1">Final Vigência</label>
-            <select id="filtroFinalVigencia" class="w-full border rounded px-2 py-1">
-              <option value="">Todas</option>
-              <option value="30">Vencem em até 30 dias</option>
-              <option value="60">Vencem em até 60 dias</option>
-              <option value="90">Vencem em até 90 dias</option>
-              <option value="120">Vencem em até 120 dias</option>
-              <option value="150">Vencem em até 150 dias</option>
-              <option value="180">Vencem em até 180 dias</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-semibold mb-1">Tipo de Objeto</label>
-            <select id="filtroTipoObjeto" class="w-full border rounded px-2 py-1">
-              <option value="">Todos</option>
-              <option value="Compras">Compras</option>
-              <option value="Outros Serviços">Outros Serviços</option>
-              <option value="Obras e Serviços de Engenharia">Obras e Serviços de Engenharia</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-semibold mb-1">Fiscal(is)</label>
-            <select id="filtroFiscal" class="w-full border rounded px-2 py-1"></select>
-          </div>
-          <div>
-            <label class="block text-sm font-semibold mb-1">Situação</label>
-            <select id="filtroSituacao" class="w-full border rounded px-2 py-1"></select>
-          </div>
+             <label class="block text-sm font-semibold mb-1">Ano do Contrato</label>
+             <select id="filtroAnoContrato" class="w-full border rounded px-2 py-1"></select>
+           </div>
+           <div>
+             <label class="block text-sm font-semibold mb-1">Final Vigência</label>
+             <select id="filtroFinalVigencia" class="w-full border rounded px-2 py-1">
+               <option value="">Todas</option>
+               <option value="30">Vencem em até 30 dias</option>
+               <option value="60">Vencem em até 60 dias</option>
+               <option value="90">Vencem em até 90 dias</option>
+               <option value="120">Vencem em até 120 dias</option>
+               <option value="150">Vencem em até 150 dias</option>
+               <option value="180">Vencem em até 180 dias</option>
+             </select>
+           </div>
+           <div>
+             <label class="block text-sm font-semibold mb-1">Tipo de Objeto</label>
+             <select id="filtroTipoObjeto" class="w-full border rounded px-2 py-1">
+               <option value="">Todos</option>
+               <option value="Compras">Compras</option>
+               <option value="Outros Serviços">Outros Serviços</option>
+               <option value="Obras e Serviços de Engenharia">Obras e Serviços de Engenharia</option>
+             </select>
+           </div>
+           <div>
+             <label class="block text-sm font-semibold mb-1">Fiscal(is)</label>
+             <select id="filtroFiscal" class="w-full border rounded px-2 py-1"></select>
+           </div>
+           <div>
+             <label class="block text-sm font-semibold mb-1">Situação</label>
+             <select id="filtroSituacao" class="w-full border rounded px-2 py-1"></select>
+           </div>
         </div>
         <div class="mt-4">
           <button id="limparFiltros" class="bg-[#E6ECEF] hover:bg-[#4DA8DA] text-[#333333] px-4 py-2 rounded">Limpar Filtros</button>
@@ -237,7 +237,7 @@
   // --- VARIÁVEIS GLOBAIS E CONFIGURAÇÃO ---
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwde77NSCugyCeRegATe3n7qPwfVzUqH-WatuX7oJj1l4NfW2mrecnqCZ1EaIo4dVCJ/exec"; 
   const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0URMfEf9HGcXuuCHgKFRfOEx7t_zR_lSMS7xNiFjPe17ZwH3u5Tw8duT1AwCsktqrY3CA3slAKxVL/pub?output=csv";
-  const ADMIN_PASSWORD = "cfiscondmae"; // Senha de administração
+  const ADMIN_PASSWORD = "!C-Fiscon.DmaeADM"; // Senha de administração
 
   let contratos = [];
   let contratosFiltrados = [];
@@ -558,4 +558,3 @@
 </script>
 </body>
 </html>
-
