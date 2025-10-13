@@ -225,7 +225,7 @@
             <div id="painelGraficos" class="hidden">
                 <section class="bg-white p-6 rounded shadow mb-6">
                     <h2 class="text-lg font-bold mb-4">Gráficos</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
                             <h3 class="font-semibold mb-2 text-sm text-gray-700">Situação dos Contratos</h3>
                             <canvas id="graficoSituacao"></canvas>
@@ -237,6 +237,10 @@
                         <div>
                             <h3 class="font-semibold mb-2 text-sm font-bold text-gray-700">Prazos dos Contratos</h3>
                             <canvas id="graficoPrazo"></canvas>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold mb-2 text-sm text-gray-700">Contratos Vigentes por Tipo de Objeto</h3>
+                            <canvas id="graficoVigentesPorObjeto"></canvas>
                         </div>
                     </div>
                 </section>
@@ -331,7 +335,8 @@
             let todosCabecalhos = [];
             let chartSituacao = null
               , chartAno = null
-              , chartPrazo = null;
+              , chartPrazo = null
+              , chartVigentesPorObjeto = null;
             let termoBuscaUniversal = "";
 
             const fiscaisCFISCON_EXIBIVEL = [{
@@ -592,7 +597,6 @@
             
             async function executarAcaoProtegida(action, payloadData = {}) {
                 if (!credenciais.username || !credenciais.password) {
-                    // Se não estiver logado, pede o login e guarda a ação para depois
                     executarAcaoComLogin(() => executarAcaoProtegida(action, payloadData));
                     return;
                 }
@@ -624,8 +628,8 @@
                     }
                 } catch (error) {
                     console.error("Protected action error:", error);
-                    if (error instanceof TypeError && error.message === 'Failed to fetch') {
-                         mostrarToast("Erro de CORS ou rede. Verifique as permissões de implantação do script.", 'erro');
+                    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                         mostrarToast("Erro de CORS ou rede. Verifique as permissões do script.", 'erro');
                     } else {
                          mostrarToast(error.message, 'erro');
                     }
@@ -701,7 +705,10 @@
                     skipEmptyLines: true,
                     complete: results => {
                         if (results.data && results.data.length > 0) {
-                            processData(results.data, results.meta.fields);
+                            const dadosValidos = results.data.filter(row => {
+                                return (row['N° Contrato'] || row['Nº Contrato'] || row['Contratado'] || '').trim() !== '';
+                            });
+                            processData(dadosValidos, results.meta.fields);
                         } else {
                             mostrarToast('Não foi possível carregar dados da planilha.', 'erro');
                         }
@@ -933,6 +940,8 @@
             // --- GRÁFICOS E DUPLICADOS ---
             function desenharGraficos() {
                 Chart.register(ChartDataLabels);
+                
+                // Gráfico 1: Situação
                 const situacoes = {};
                 contratosFiltrados.forEach(c => {
                     const grupo = agruparSituacao(c['Situação']);
@@ -968,6 +977,8 @@
                         }
                     }
                 });
+
+                // Gráfico 2: Ano
                 const anos = {};
                 contratosFiltrados.forEach(c => {
                     if (c['AnoContrato'])
@@ -1003,6 +1014,8 @@
                         }
                     }
                 });
+
+                // Gráfico 3: Prazo
                 const faixas = [{
                     label: 'Até 6 meses',
                     min: 0,
@@ -1059,6 +1072,40 @@
                                 font: {
                                     weight: 'bold'
                                 }
+                            }
+                        }
+                    }
+                });
+
+                // Gráfico 4: Vigentes por Tipo de Objeto
+                const vigentesPorObjeto = {};
+                contratosFiltrados
+                    .filter(c => agruparSituacao(c['Situação']) === 'Vigente')
+                    .forEach(c => {
+                        const tipo = mapearTipoObjeto(c['Objeto']);
+                        vigentesPorObjeto[tipo] = (vigentesPorObjeto[tipo] || 0) + 1;
+                    });
+                
+                const vpoLabels = Object.keys(vigentesPorObjeto);
+                const vpoData = vpoLabels.map(label => vigentesPorObjeto[label]);
+
+                if (chartVigentesPorObjeto) chartVigentesPorObjeto.destroy();
+                chartVigentesPorObjeto = new Chart($('#graficoVigentesPorObjeto'), {
+                    type: 'pie',
+                    data: {
+                        labels: vpoLabels,
+                        datasets: [{
+                            data: vpoData,
+                            backgroundColor: ['#1E4069', '#4DA8DA', '#00A651']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold' }
                             }
                         }
                     }
