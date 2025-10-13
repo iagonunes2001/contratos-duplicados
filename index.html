@@ -228,19 +228,27 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
                             <h3 class="font-semibold mb-2 text-sm text-gray-700">Situação dos Contratos</h3>
-                            <canvas id="graficoSituacao"></canvas>
+                            <div class="relative h-80">
+                                <canvas id="graficoSituacao"></canvas>
+                            </div>
                         </div>
                         <div>
                             <h3 class="font-semibold mb-2 text-sm text-gray-700">Contratos por Ano</h3>
-                            <canvas id="graficoAno"></canvas>
+                            <div class="relative h-80">
+                                <canvas id="graficoAno"></canvas>
+                            </div>
                         </div>
                         <div>
                             <h3 class="font-semibold mb-2 text-sm font-bold text-gray-700">Prazos dos Contratos</h3>
-                            <canvas id="graficoPrazo"></canvas>
+                            <div class="relative h-80">
+                                <canvas id="graficoPrazo"></canvas>
+                            </div>
                         </div>
                         <div>
                             <h3 class="font-semibold mb-2 text-sm text-gray-700">Contratos Vigentes por Tipo de Objeto</h3>
-                            <canvas id="graficoVigentesPorObjeto"></canvas>
+                            <div class="relative h-80">
+                                <canvas id="graficoVigentesPorObjeto"></canvas>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -964,6 +972,7 @@
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: {
                                 position: 'bottom'
@@ -1001,6 +1010,7 @@
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: {
                                 display: false
@@ -1063,6 +1073,7 @@
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: {
                                 position: 'bottom'
@@ -1101,6 +1112,7 @@
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: { position: 'bottom' },
                             datalabels: {
