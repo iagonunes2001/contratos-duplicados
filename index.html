@@ -589,7 +589,51 @@
                     $('#inputUsuario').focus();
                 }
             }
+            
+            async function executarAcaoProtegida(action, payloadData = {}) {
+                if (!credenciais.username || !credenciais.password) {
+                    // Se não estiver logado, pede o login e guarda a ação para depois
+                    executarAcaoComLogin(() => executarAcaoProtegida(action, payloadData));
+                    return;
+                }
 
+                showSaving(true, 'Executando...');
+                
+                const payload = {
+                    ...credenciais,
+                    action,
+                    ...payloadData
+                };
+
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(payload),
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        mostrarToast(result.message, 'sucesso');
+                        setTimeout(() => {
+                            $('#modalDetalhes').addClass('hidden');
+                            carregarContratosPlanilha();
+                        }, 1000);
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (error) {
+                    console.error("Protected action error:", error);
+                    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+                         mostrarToast("Erro de CORS ou rede. Verifique as permissões de implantação do script.", 'erro');
+                    } else {
+                         mostrarToast(error.message, 'erro');
+                    }
+                } finally {
+                    showSaving(false);
+                }
+            }
+            
             // --- LÓGICA DE DADOS, FORMULÁRIOS E UI ---
             function mostrarFormularioEdicao(contrato) {
                 currentEditingContract = contrato;
@@ -628,42 +672,6 @@
                 $('#modal-display-view, #modal-delete-confirm').addClass('hidden');
                 $('#modal-edit-form').removeClass('hidden');
                 $('#modalDetalhes').removeClass('hidden');
-            }
-            
-            async function executarAcaoProtegida(action, payloadData = {}) {
-                if (!credenciais.username || !credenciais.password) {
-                    mostrarToast("Erro: login não realizado.", "erro");
-                    return;
-                }
-
-                showSaving(true, 'Executando...');
-                
-                const payload = {
-                    ...credenciais,
-                    action,
-                    ...payloadData
-                };
-
-                try {
-                    const response = await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors', 
-                        body: JSON.stringify(payload),
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    
-                    mostrarToast('Comando enviado. Atualizando dados...', 'sucesso');
-                    setTimeout(() => {
-                        $('#modalDetalhes').addClass('hidden');
-                        carregarContratosPlanilha();
-                    }, 2500);
-
-                } catch (error) {
-                    console.error("Fetch error:", error);
-                    mostrarToast("Erro de rede ao enviar comando.", 'erro');
-                } finally {
-                    showSaving(false);
-                }
             }
             
             function processData(data, headers) {
@@ -1129,7 +1137,7 @@
                         $('#painelDuplicados').removeClass('hidden');
                 }
                 
-                function handleLogin() {
+                async function handleLogin() {
                     const username = $('#inputUsuario').val().trim();
                     const password = $('#inputSenha').val().trim();
 
@@ -1138,14 +1146,36 @@
                         return;
                     }
                     
-                    credenciais = { username, password };
-                    $('#modalLogin').addClass('hidden');
-                    updateAuthUI();
-                    mostrarToast('Login realizado! Agora você pode modificar os dados.', 'sucesso');
-                    
-                    if (acaoPendente) {
-                        acaoPendente();
-                        acaoPendente = null;
+                    showSaving(true, 'Validando...');
+
+                    try {
+                        const response = await fetch(SCRIPT_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({ action: 'validate-login', username, password }),
+                            redirect: 'follow' 
+                        });
+                        
+                        const result = await response.json();
+
+                        if (result.status === 'success') {
+                            credenciais = { username, password };
+                            $('#modalLogin').addClass('hidden');
+                            updateAuthUI();
+                            mostrarToast(result.message, 'sucesso');
+                            
+                            if (acaoPendente) {
+                                acaoPendente();
+                                acaoPendente = null;
+                            }
+                        } else {
+                            throw new Error(result.message);
+                        }
+
+                    } catch (error) {
+                        console.error("Login error:", error);
+                        $('#erroLogin').text(error.message || 'Erro de rede. Verifique o console.').removeClass('hidden');
+                    } finally {
+                        showSaving(false);
                     }
                 }
 
@@ -1177,7 +1207,6 @@
                 // Modal e formulário
                 $('#form-edicao').on('submit', (e) => {
                     e.preventDefault();
-                    // Não precisa do executarAcaoComLogin aqui, pois o form só é visível após o login
                     const formData = new FormData(e.target);
                     const data = Object.fromEntries(formData.entries());
                     const action = currentEditingContract ? 'update' : 'create';
@@ -1203,7 +1232,6 @@
                 
                 // Exclusão
                 $('#btnExcluirContrato').on('click', () => {
-                    // A checagem de login será feita no botão de confirmação
                     $('#modal-display-view').addClass('hidden');
                     $('#modal-delete-confirm').removeClass('hidden');
                 });
@@ -1219,7 +1247,7 @@
 
                 // Modal de Login
                 $('header').on('click', '#btnLogin', () => {
-                    acaoPendente = null; // Garante que nenhuma ação pendente seja executada
+                    acaoPendente = null; 
                     $('#erroLogin').text('').addClass('hidden');
                     $('#inputUsuario').val('');
                     $('#inputSenha').val('');
@@ -1234,7 +1262,7 @@
                     acaoPendente = null;
                 });
                 $('#modalLogin input').on('keypress', function(e) {
-                    if (e.which === 13) { // Enter key
+                    if (e.which === 13) { 
                         handleLogin();
                     }
                 });
