@@ -671,19 +671,32 @@
                 let html = '';
                 const camposIgnorados = ['RowID', 'originalIndex'];
                 todosCabecalhos.forEach(key => {
-                    if (camposIgnorados.includes(key))
-                        return;
+                    if (camposIgnorados.includes(key)) return;
+
                     const valor = contrato[key] ?? '';
-                    let inputType = 'text';
-                    let inputValue = valor;
-                    if (['Início Vigência', 'Final Vigência', 'Assinatura'].includes(key)) {
-                        inputType = 'date';
+                    html += `<div><label for="edit-${key}" class="block text-xs font-medium text-gray-700 mb-1">${key}</label>`;
+
+                    if (key === 'Objeto') {
+                        const options = ["Compras", "Outros Serviços", "Obras e Serviços de Engenharia", "Contratação Veículo"];
+                        html += `<select id="edit-${key}" name="${key}" class="form-input">`;
+                        if (!valor || !options.includes(valor)) {
+                            html += `<option value="" selected disabled>Selecione...</option>`;
+                        }
+                        options.forEach(opt => {
+                            const selected = valor === opt ? 'selected' : '';
+                            html += `<option value="${opt}" ${selected}>${opt}</option>`;
+                        });
+                        html += `</select>`;
+                    } else if (['Início Vigência', 'Final Vigência', 'Assinatura'].includes(key)) {
                         const parsed = parseDate(valor);
-                        inputValue = parsed ? new Date(parsed.getTime() - (parsed.getTimezoneOffset() * 60000)).toISOString().split('T')[0] : '';
+                        const inputValue = parsed ? new Date(parsed.getTime() - (parsed.getTimezoneOffset() * 60000)).toISOString().split('T')[0] : '';
+                        html += `<input type="date" id="edit-${key}" name="${key}" value="${inputValue}" class="form-input">`;
+                    } else {
+                        html += `<input type="text" id="edit-${key}" name="${key}" value="${valor}" class="form-input">`;
                     }
-                    html += `<div><label for="edit-${key}" class="block text-xs font-medium text-gray-700 mb-1">${key}</label><input type="${inputType}" id="edit-${key}" name="${key}" value="${inputValue}" class="form-input"></div>`;
-                }
-                );
+                    html += `</div>`;
+                });
+
                 formFields.html(html);
                 $('#modal-display-view, #modal-delete-confirm').addClass('hidden');
                 $('#modal-edit-form').removeClass('hidden');
